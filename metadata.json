@@ -1,0 +1,16 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Id": "com.t145.matrixrain",
+        "Name": "Matrix Digital Rain",
+        "Description": "Lore-accurate Matrix falling code with half-width katakana, mirrored characters, and configurable glow",
+        "Icon": "preferences-desktop-wallpaper",
+        "License": "GPL-3.0",
+        "Authors": [
+            {
+                "Name": "T145"
+            }
+        ]
+    },
+    "X-KDE-ParentApp": "org.kde.plasmashell"
+}

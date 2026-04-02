@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+
+  <group name="General">
+    <entry name="fontSize" type="Int">
+      <label>Font size in pixels</label>
+      <default>16</default>
+      <min>8</min>
+      <max>48</max>
+    </entry>
+
+    <entry name="fontFamily" type="String">
+      <label>Font family (must support katakana)</label>
+      <default>Noto Sans Mono CJK JP</default>
+    </entry>
+
+    <entry name="speed" type="Int">
+      <label>Animation speed (frames per second)</label>
+      <default>30</default>
+      <min>5</min>
+      <max>60</max>
+    </entry>
+
+    <entry name="matrixColor" type="String">
+      <label>Matrix trail color</label>
+      <default>#00ff41</default>
+    </entry>
+
+    <entry name="headColor" type="String">
+      <label>Leading character color</label>
+      <default>#ccffcc</default>
+    </entry>
+
+    <entry name="fadeRate" type="Double">
+      <label>Trail fade rate (lower = longer trails)</label>
+      <default>0.05</default>
+      <min>0.01</min>
+      <max>0.20</max>
+    </entry>
+
+    <entry name="mirrorChars" type="Bool">
+      <label>Mirror characters horizontally (lore-accurate)</label>
+      <default>true</default>
+    </entry>
+
+    <entry name="glowEnabled" type="Bool">
+      <label>Enable glow effect on leading character</label>
+      <default>true</default>
+    </entry>
+
+    <entry name="glowRadius" type="Int">
+      <label>Glow radius in pixels</label>
+      <default>8</default>
+      <min>2</min>
+      <max>24</max>
+    </entry>
+
+    <entry name="charSet" type="Int">
+      <label>Character set (0=Lore-accurate, 1=Katakana only, 2=Katakana+Latin+Digits)</label>
+      <default>0</default>
+    </entry>
+  </group>
+</kcfg>
