@@ -23,7 +23,7 @@ WallpaperItem {
     // Character sets
     // ---------------------------------------------------------------------------
     property var charSets: [
-        "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789",
+        "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789Z:\"¦꞊╌-.|+<>*",
         "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ",
         "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*<>="
     ]
@@ -75,19 +75,22 @@ WallpaperItem {
             }
         }
 
-        // Draw a single character, optionally mirrored and glowing.
-        // When mirrorChars is on, every character goes through save/restore
-        // (same pattern as original) but only katakana get the scale flip.
+        // Draw a single character, center-aligned in its cell,
+        // optionally mirrored and glowing.
+        // The broken bar (¦) is always right-aligned per the film.
         function drawChar(ctx, ch, x, y, color, glow, mirror) {
             var fs = root.fontSize;
+            var rightAlign = (ch === "\u00A6");
+            var ax = rightAlign ? x + fs : x + fs * 0.5;
+            var align = rightAlign ? "right" : "center";
 
             if (root.mirrorChars) {
                 ctx.save();
-                ctx.translate(x + fs, y);
+                ctx.translate(ax, y);
+                ctx.textAlign = align;
+
                 if (mirror) {
                     ctx.scale(-1, 1);
-                } else {
-                    ctx.textAlign = "right";
                 }
 
                 if (glow && root.glowEnabled) {
@@ -101,13 +104,15 @@ WallpaperItem {
                 ctx.shadowBlur = 0;
                 ctx.restore();
             } else {
+                ctx.textAlign = align;
+
                 if (glow && root.glowEnabled) {
                     ctx.shadowBlur  = root.glowRadius;
                     ctx.shadowColor = root.matrixColor;
                 }
 
                 ctx.fillStyle = color;
-                ctx.fillText(ch, x, y);
+                ctx.fillText(ch, ax, y);
 
                 ctx.shadowBlur = 0;
             }
@@ -155,10 +160,12 @@ WallpaperItem {
                 while (col.acc >= 1.0) {
                     col.acc -= 1.0;
 
-                    // Push new head character into the trail (tag katakana at creation)
+                    // Tag characters for mirroring: katakana always, digits 2-7 & 9 randomly
                     var ch = randomChar();
                     var code = ch.charCodeAt(0);
-                    col.trail.unshift({ ch: ch, row: col.y, kana: code >= 0xFF66 && code <= 0xFF9F });
+                    var isKana = code >= 0xFF66 && code <= 0xFF9F;
+                    var isMirrorableDigit = (code >= 0x0032 && code <= 0x0037) || code === 0x0039;
+                    col.trail.unshift({ ch: ch, row: col.y, kana: isKana || (isMirrorableDigit && Math.random() < 0.5) });
                     if (col.trail.length > tLen) col.trail.length = tLen;
 
                     col.y++;
