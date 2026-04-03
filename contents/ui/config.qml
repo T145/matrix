@@ -21,8 +21,7 @@ ColumnLayout {
     property string cfg_fontFamily
 
     Kirigami.FormLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
+        Layout.fillWidth: true
 
         // --- Character Set ---------------------------------------------------
         Kirigami.Separator {
