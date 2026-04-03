@@ -75,14 +75,20 @@ WallpaperItem {
             }
         }
 
-        // Draw a single character, optionally mirrored and glowing
-        function drawChar(ctx, ch, x, y, color, glow) {
+        // Draw a single character, optionally mirrored and glowing.
+        // When mirrorChars is on, every character goes through save/restore
+        // (same pattern as original) but only katakana get the scale flip.
+        function drawChar(ctx, ch, x, y, color, glow, mirror) {
             var fs = root.fontSize;
 
             if (root.mirrorChars) {
                 ctx.save();
                 ctx.translate(x + fs, y);
-                ctx.scale(-1, 1);
+                if (mirror) {
+                    ctx.scale(-1, 1);
+                } else {
+                    ctx.textAlign = "right";
+                }
 
                 if (glow && root.glowEnabled) {
                     ctx.shadowBlur  = root.glowRadius;
@@ -149,8 +155,10 @@ WallpaperItem {
                 while (col.acc >= 1.0) {
                     col.acc -= 1.0;
 
-                    // Push new head character into the trail
-                    col.trail.unshift({ ch: randomChar(), row: col.y });
+                    // Push new head character into the trail (tag katakana at creation)
+                    var ch = randomChar();
+                    var code = ch.charCodeAt(0);
+                    col.trail.unshift({ ch: ch, row: col.y, kana: code >= 0xFF66 && code <= 0xFF9F });
                     if (col.trail.length > tLen) col.trail.length = tLen;
 
                     col.y++;
@@ -187,14 +195,14 @@ WallpaperItem {
                     var cb = Math.round(root.mcB * brightness);
                     var color = "rgb(" + cr + "," + cg + "," + cb + ")";
 
-                    drawChar(ctx, entry.ch, x, ty, color, false);
+                    drawChar(ctx, entry.ch, x, ty, color, false, entry.kana);
                 }
 
                 // Draw head character (index 0) in bright white with glow
                 var head = col.trail[0];
                 var hy   = head.row * fs;
                 if (hy >= 0 && hy <= h) {
-                    drawChar(ctx, head.ch, x, hy, root.headColor, true);
+                    drawChar(ctx, head.ch, x, hy, root.headColor, true, head.kana);
                 }
             }
         }
