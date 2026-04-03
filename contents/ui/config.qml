@@ -15,10 +15,11 @@ ColumnLayout {
     property alias cfg_glowRadius:  glowRadiusSpinBox.value
     property alias cfg_charSet:     charSetCombo.currentIndex
 
-    // Colors need manual handling (alias to text, bound in both directions)
+    // Colors and fonts need manual handling (alias to text, bound in both directions)
     property string cfg_matrixColor
     property string cfg_headColor
     property string cfg_fontFamily
+    property string cfg_digitFont
 
     Kirigami.FormLayout {
         Layout.fillWidth: true
@@ -61,10 +62,18 @@ ColumnLayout {
 
         QQC.TextField {
             id: fontFamilyField
-            Kirigami.FormData.label: "Font Family:"
+            Kirigami.FormData.label: "Katakana Font:"
             text: configRoot.cfg_fontFamily
             onTextChanged: configRoot.cfg_fontFamily = text
             placeholderText: "Noto Sans Mono CJK JP"
+        }
+
+        QQC.TextField {
+            id: digitFontField
+            Kirigami.FormData.label: "Digit/Latin Font:"
+            text: configRoot.cfg_digitFont
+            onTextChanged: configRoot.cfg_digitFont = text
+            placeholderText: "Hack Nerd Font Mono"
         }
 
         QQC.TextField {

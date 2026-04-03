@@ -10,6 +10,7 @@ WallpaperItem {
     // ---------------------------------------------------------------------------
     property int    fontSize:    root.configuration.fontSize    !== undefined ? root.configuration.fontSize    : 16
     property string fontFamily:  root.configuration.fontFamily  !== undefined ? root.configuration.fontFamily  : "Noto Sans Mono CJK JP"
+    property string digitFont:   root.configuration.digitFont   !== undefined ? root.configuration.digitFont   : "Hack Nerd Font Mono"
     property int    speed:       root.configuration.speed       !== undefined ? root.configuration.speed       : 30
     property color  matrixColor: root.configuration.matrixColor !== undefined ? root.configuration.matrixColor : "#00ff41"
     property color  headColor:   root.configuration.headColor   !== undefined ? root.configuration.headColor   : "#ccffcc"
@@ -38,6 +39,10 @@ WallpaperItem {
     property int mcR: Math.round(matrixColor.r * 255)
     property int mcG: Math.round(matrixColor.g * 255)
     property int mcB: Math.round(matrixColor.b * 255)
+
+    // Pre-compute font strings to avoid repeated concatenation in the paint loop
+    property string kanaFontStr:  fontSize + "px " + fontFamily
+    property string digitFontStr: fontSize + "px " + digitFont
 
     // ---------------------------------------------------------------------------
     // Canvas renderer
@@ -75,8 +80,48 @@ WallpaperItem {
             }
         }
 
+        // Draw all characters of one font class (kana or non-kana).
+        // Font must already be set on ctx before calling.
+        function drawPass(ctx, wantKana, fs, w, h, tLen) {
+            var mcR = root.mcR, mcG = root.mcG, mcB = root.mcB;
+
+            for (var i = 0; i < columns.length; i++) {
+                var col = columns[i];
+                if (col.trail.length === 0) continue;
+
+                var x = i * fs;
+
+                // Trail characters (index 1 → end)
+                for (var t = col.trail.length - 1; t >= 1; t--) {
+                    var entry = col.trail[t];
+                    if (entry.isKana !== wantKana) continue;
+
+                    var ty = entry.row * fs;
+                    if (ty < 0 || ty > h) continue;
+
+                    var frac = 1.0 - (t / tLen);
+                    var brightness = 0.3 + frac * 0.7;
+                    var cr = Math.round(mcR * brightness);
+                    var cg = Math.round(mcG * brightness);
+                    var cb = Math.round(mcB * brightness);
+                    var color = "rgb(" + cr + "," + cg + "," + cb + ")";
+
+                    drawChar(ctx, entry.ch, x, ty, color, false, entry.mirror);
+                }
+
+                // Head character (index 0)
+                var head = col.trail[0];
+                if (head.isKana !== wantKana) continue;
+                var hy = head.row * fs;
+                if (hy >= 0 && hy <= h) {
+                    drawChar(ctx, head.ch, x, hy, root.headColor, true, head.mirror);
+                }
+            }
+        }
+
         // Draw a single character, center-aligned in its cell,
         // optionally mirrored and glowing.
+        // Font must be set by the caller (two-pass draw sets it once per pass).
         // The broken bar (¦) is always right-aligned per the film.
         function drawChar(ctx, ch, x, y, color, glow, mirror) {
             var fs = root.fontSize;
@@ -149,7 +194,6 @@ WallpaperItem {
             ctx.fillStyle = "rgba(0, 0, 0, " + root.fadeRate.toFixed(3) + ")";
             ctx.fillRect(0, 0, w, h);
 
-            ctx.font         = fs + "px " + root.fontFamily;
             ctx.textBaseline = "top";
 
             // --- Phase 1: advance state ------------------------------------------
@@ -160,12 +204,16 @@ WallpaperItem {
                 while (col.acc >= 1.0) {
                     col.acc -= 1.0;
 
-                    // Tag characters for mirroring: katakana always, digits 2-7 & 9 randomly
                     var ch = randomChar();
                     var code = ch.charCodeAt(0);
+                    // isKana: true katakana status (for font selection)
+                    // mirror: whether to flip horizontally (katakana always, some digits randomly)
                     var isKana = code >= 0xFF66 && code <= 0xFF9F;
                     var isMirrorableDigit = (code >= 0x0032 && code <= 0x0037) || code === 0x0039;
-                    col.trail.unshift({ ch: ch, row: col.y, kana: isKana || (isMirrorableDigit && Math.random() < 0.5) });
+                    col.trail.unshift({
+                        ch: ch, row: col.y, isKana: isKana,
+                        mirror: isKana || (isMirrorableDigit && Math.random() < 0.5)
+                    });
                     if (col.trail.length > tLen) col.trail.length = tLen;
 
                     col.y++;
@@ -179,39 +227,14 @@ WallpaperItem {
                 }
             }
 
-            // --- Phase 2: draw ---------------------------------------------------
-            for (var i = 0; i < columns.length; i++) {
-                var col = columns[i];
-                if (col.trail.length === 0) continue;
+            // --- Phase 2: draw (two-pass — font set once per pass) ---------------
+            // Pass 1: katakana characters (CJK font — set once)
+            ctx.font = root.kanaFontStr;
+            drawPass(ctx, true, fs, w, h, tLen);
 
-                var x = i * fs;
-
-                // Draw green trail (index 1 → end, newest to oldest)
-                // Brightness fades linearly from full green to ~30 % green
-                for (var t = col.trail.length - 1; t >= 1; t--) {
-                    var entry = col.trail[t];
-                    var ty    = entry.row * fs;
-
-                    if (ty < 0 || ty > h) continue;
-
-                    var frac = 1.0 - (t / tLen);   // 1.0 (newest) → ~0.0 (oldest)
-                    var brightness = 0.3 + frac * 0.7;  // 1.0 → 0.3
-
-                    var cr = Math.round(root.mcR * brightness);
-                    var cg = Math.round(root.mcG * brightness);
-                    var cb = Math.round(root.mcB * brightness);
-                    var color = "rgb(" + cr + "," + cg + "," + cb + ")";
-
-                    drawChar(ctx, entry.ch, x, ty, color, false, entry.kana);
-                }
-
-                // Draw head character (index 0) in bright white with glow
-                var head = col.trail[0];
-                var hy   = head.row * fs;
-                if (hy >= 0 && hy <= h) {
-                    drawChar(ctx, head.ch, x, hy, root.headColor, true, head.kana);
-                }
-            }
+            // Pass 2: digit/Latin/symbol characters (digit font — set once)
+            ctx.font = root.digitFontStr;
+            drawPass(ctx, false, fs, w, h, tLen);
         }
     }
 
@@ -220,6 +243,7 @@ WallpaperItem {
     // ---------------------------------------------------------------------------
     onFontSizeChanged:   canvas.initColumns()
     onFontFamilyChanged: canvas.initColumns()
+    onDigitFontChanged:  canvas.initColumns()
     onSpeedChanged:      timer.interval = Math.round(1000 / root.speed)
     onCharSetChanged:    { root.chars = root.charSets[Math.min(root.charSet, root.charSets.length - 1)]; }
 }

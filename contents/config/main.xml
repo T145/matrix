@@ -18,6 +18,11 @@
       <default>Noto Sans Mono CJK JP</default>
     </entry>
 
+    <entry name="digitFont" type="String">
+      <label>Font family for digits and Latin characters (should have slashed zero)</label>
+      <default>Hack Nerd Font Mono</default>
+    </entry>
+
     <entry name="speed" type="Int">
       <label>Animation speed (frames per second)</label>
       <default>30</default>
