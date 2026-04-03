@@ -44,6 +44,31 @@ WallpaperItem {
     property string kanaFontStr:  fontSize + "px " + fontFamily
     property string digitFontStr: fontSize + "px " + digitFont
 
+    // Cached fade overlay string — rebuilt reactively only when fadeRate changes
+    property string fadeOverlay: "rgba(0,0,0," + fadeRate.toFixed(3) + ")"
+
+    // Pre-computed trail colour look-up table — indexed by trail position.
+    // Rebuilt only when matrixColor changes; avoids per-character Math.round()
+    // calls and rgb() string concatenation in the paint loop.
+    property var trailColorLUT: []
+    function rebuildColorLUT() {
+        var lut = [];
+        var tLen = trailLength;
+        var r = mcR, g = mcG, b = mcB;
+        for (var t = 0; t < tLen; t++) {
+            var frac = 1.0 - (t / tLen);
+            var brightness = 0.3 + frac * 0.7;
+            lut.push("rgb(" + Math.round(r * brightness) + ","
+                            + Math.round(g * brightness) + ","
+                            + Math.round(b * brightness) + ")");
+        }
+        trailColorLUT = lut;
+    }
+    onMcRChanged: rebuildColorLUT()
+    onMcGChanged: rebuildColorLUT()
+    onMcBChanged: rebuildColorLUT()
+    Component.onCompleted: rebuildColorLUT()
+
     // ---------------------------------------------------------------------------
     // Canvas renderer
     // ---------------------------------------------------------------------------
@@ -83,7 +108,7 @@ WallpaperItem {
         // Draw all characters of one font class (kana or non-kana).
         // Font must already be set on ctx before calling.
         function drawPass(ctx, wantKana, fs, w, h, tLen) {
-            var mcR = root.mcR, mcG = root.mcG, mcB = root.mcB;
+            var lut = root.trailColorLUT;
 
             for (var i = 0; i < columns.length; i++) {
                 var col = columns[i];
@@ -99,14 +124,7 @@ WallpaperItem {
                     var ty = entry.row * fs;
                     if (ty < 0 || ty > h) continue;
 
-                    var frac = 1.0 - (t / tLen);
-                    var brightness = 0.3 + frac * 0.7;
-                    var cr = Math.round(mcR * brightness);
-                    var cg = Math.round(mcG * brightness);
-                    var cb = Math.round(mcB * brightness);
-                    var color = "rgb(" + cr + "," + cg + "," + cb + ")";
-
-                    drawChar(ctx, entry.ch, x, ty, color, false, entry.mirror);
+                    drawChar(ctx, entry.ch, x, ty, lut[t], false, entry.mirror);
                 }
 
                 // Head character (index 0)
@@ -191,7 +209,7 @@ WallpaperItem {
             var tLen = root.trailLength;
 
             // --- Fade overlay ----------------------------------------------------
-            ctx.fillStyle = "rgba(0, 0, 0, " + root.fadeRate.toFixed(3) + ")";
+            ctx.fillStyle = root.fadeOverlay;
             ctx.fillRect(0, 0, w, h);
 
             ctx.textBaseline = "top";
