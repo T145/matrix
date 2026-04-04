@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import org.kde.plasma.plasmoid 2.0
+import QtQuick
+import org.kde.plasma.plasmoid
 
 WallpaperItem {
     id: root
@@ -14,7 +14,7 @@ WallpaperItem {
     property int    speed:       root.configuration.speed       !== undefined ? root.configuration.speed       : 30
     property color  matrixColor: root.configuration.matrixColor !== undefined ? root.configuration.matrixColor : "#00ff41"
     property color  headColor:   root.configuration.headColor   !== undefined ? root.configuration.headColor   : "#ccffcc"
-    property real   fadeRate:    root.configuration.fadeRate     !== undefined ? root.configuration.fadeRate     : 0.05
+    property real   fadeRate:    root.configuration.fadeRate    !== undefined ? root.configuration.fadeRate    : 0.05
     property bool   mirrorChars: root.configuration.mirrorChars !== undefined ? root.configuration.mirrorChars : true
     property bool   glowEnabled: root.configuration.glowEnabled !== undefined ? root.configuration.glowEnabled : true
     property int    glowRadius:  root.configuration.glowRadius  !== undefined ? root.configuration.glowRadius  : 8
@@ -55,13 +55,16 @@ WallpaperItem {
         var lut = [];
         var tLen = trailLength;
         var r = mcR, g = mcG, b = mcB;
-        for (var t = 0; t < tLen; t++) {
-            var frac = 1.0 - (t / tLen);
-            var brightness = 0.3 + frac * 0.7;
+
+        for (let t = 0; t < tLen; t++) {
+            let frac = 1.0 - (t / tLen);
+            let brightness = 0.3 + frac * 0.7;
+
             lut.push("rgb(" + Math.round(r * brightness) + ","
                             + Math.round(g * brightness) + ","
                             + Math.round(b * brightness) + ")");
         }
+
         trailColorLUT = lut;
     }
     onMcRChanged: rebuildColorLUT()
@@ -88,7 +91,8 @@ WallpaperItem {
             var cols = Math.floor(canvas.width / root.fontSize);
             var rows = Math.floor(canvas.height / root.fontSize);
             columns = [];
-            for (var i = 0; i < cols; i++) {
+
+            for (let i = 0; i < cols; i++) {
                 columns.push({
                     y:     Math.floor(Math.random() * -rows),
                     speed: 0.3 + Math.random() * 1.2,
@@ -96,6 +100,7 @@ WallpaperItem {
                     trail: []   // [{ch, row}] — most recent first
                 });
             }
+
             initialized = true;
 
             var ctx = getContext("2d");
@@ -110,27 +115,28 @@ WallpaperItem {
         function drawPass(ctx, wantKana, fs, w, h, tLen) {
             var lut = root.trailColorLUT;
 
-            for (var i = 0; i < columns.length; i++) {
-                var col = columns[i];
+            for (let i = 0; i < columns.length; i++) {
+                let col = columns[i];
+
                 if (col.trail.length === 0) continue;
 
-                var x = i * fs;
+                let x = i * fs;
 
                 // Trail characters (index 1 → end)
-                for (var t = col.trail.length - 1; t >= 1; t--) {
-                    var entry = col.trail[t];
+                for (let t = col.trail.length - 1; t >= 1; t--) {
+                    let entry = col.trail[t];
                     if (entry.isKana !== wantKana) continue;
 
-                    var ty = entry.row * fs;
+                    let ty = entry.row * fs;
                     if (ty < 0 || ty > h) continue;
 
                     drawChar(ctx, entry.ch, x, ty, lut[t], false, entry.mirror);
                 }
 
                 // Head character (index 0)
-                var head = col.trail[0];
+                let head = col.trail[0];
                 if (head.isKana !== wantKana) continue;
-                var hy = head.row * fs;
+                let hy = head.row * fs;
                 if (hy >= 0 && hy <= h) {
                     drawChar(ctx, head.ch, x, hy, root.headColor, true, head.mirror);
                 }
@@ -215,23 +221,25 @@ WallpaperItem {
             ctx.textBaseline = "top";
 
             // --- Phase 1: advance state ------------------------------------------
-            for (var i = 0; i < columns.length; i++) {
-                var col = columns[i];
+            for (let i = 0; i < columns.length; i++) {
+                let col = columns[i];
                 col.acc += col.speed;
 
                 while (col.acc >= 1.0) {
                     col.acc -= 1.0;
 
-                    var ch = randomChar();
-                    var code = ch.charCodeAt(0);
+                    let ch = randomChar();
+                    let code = ch.charCodeAt(0);
                     // isKana: true katakana status (for font selection)
                     // mirror: whether to flip horizontally (katakana always, some digits randomly)
-                    var isKana = code >= 0xFF66 && code <= 0xFF9F;
-                    var isMirrorableDigit = (code >= 0x0032 && code <= 0x0037) || code === 0x0039;
+                    let isKana = code >= 0xFF66 && code <= 0xFF9F;
+                    let isMirrorableDigit = (code >= 0x0032 && code <= 0x0037) || code === 0x0039;
+
                     col.trail.unshift({
                         ch: ch, row: col.y, isKana: isKana,
                         mirror: isKana || (isMirrorableDigit && Math.random() < 0.5)
                     });
+
                     if (col.trail.length > tLen) col.trail.length = tLen;
 
                     col.y++;

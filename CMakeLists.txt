@@ -23,10 +23,10 @@ qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
 
 # Verify expected QML modules are available at configure time
-ecm_find_qmlmodule(org.kde.plasma.plasmoid 2.0)
-ecm_find_qmlmodule(org.kde.kirigami 2.20)
-ecm_find_qmlmodule(QtQuick.Controls 2.15)
-ecm_find_qmlmodule(QtQuick.Layouts 1.15)
+ecm_find_qmlmodule(org.kde.plasma.plasmoid)
+ecm_find_qmlmodule(org.kde.kirigami)
+ecm_find_qmlmodule(QtQuick.Controls)
+ecm_find_qmlmodule(QtQuick.Layouts)
 
 # ---------------------------------------------------------------------------
 # QML module declaration (for qmlls / qmllint tooling only)
