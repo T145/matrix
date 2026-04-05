@@ -14,13 +14,8 @@
     </entry>
 
     <entry name="fontFamily" type="String">
-      <label>Font family (must support katakana)</label>
-      <default>Noto Sans Mono CJK JP</default>
-    </entry>
-
-    <entry name="digitFont" type="String">
-      <label>Font family for digits and Latin characters (should have slashed zero)</label>
-      <default>Hack Nerd Font Mono</default>
+      <label>Font family for all characters (must support katakana)</label>
+      <default>Matrixesque</default>
     </entry>
 
     <entry name="speed" type="Int">

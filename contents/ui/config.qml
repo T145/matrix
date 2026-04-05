@@ -19,7 +19,6 @@ ColumnLayout {
     property string cfg_matrixColor
     property string cfg_headColor
     property string cfg_fontFamily
-    property string cfg_digitFont
 
     Kirigami.FormLayout {
         Layout.fillWidth: true
@@ -62,18 +61,10 @@ ColumnLayout {
 
         QQC.TextField {
             id: fontFamilyField
-            Kirigami.FormData.label: "Katakana Font:"
+            Kirigami.FormData.label: "Font:"
             text: configRoot.cfg_fontFamily
             onTextChanged: configRoot.cfg_fontFamily = text
-            placeholderText: "Noto Sans Mono CJK JP"
-        }
-
-        QQC.TextField {
-            id: digitFontField
-            Kirigami.FormData.label: "Digit/Latin Font:"
-            text: configRoot.cfg_digitFont
-            onTextChanged: configRoot.cfg_digitFont = text
-            placeholderText: "Hack Nerd Font Mono"
+            placeholderText: "Matrixesque"
         }
 
         QQC.TextField {
